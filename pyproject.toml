@@ -1,0 +1,16 @@
+[project]
+name = "urls_scraper"
+version = "0.1.0"
+description = "Cloud Run to scrape jobs urls from a website."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "loguru",
+    "selenium",
+    "fake-useragent",
+    "beautifulsoup4",
+    "pandas",
+    "python-dotenv",
+    "google-cloud-storage",
+    "psycopg2-binary"
+]
