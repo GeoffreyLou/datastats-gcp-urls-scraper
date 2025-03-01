@@ -9,7 +9,8 @@ on:
 
 jobs:
   deploy_cloud_run:
-    if: github.event.pull_request.merged == true
+    if: false
+    # if: github.event.pull_request.merged == true
 
     runs-on: ubuntu-latest
 
