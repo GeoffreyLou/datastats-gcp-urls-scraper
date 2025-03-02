@@ -18,7 +18,6 @@ if __name__ == '__main__':
     except EnvironmentError as e:
         logger.error(f'Error while generating config: {e}')
         sys.exit(0)
-    
         
     # Formatted variables 
     url_to_scrap = config.URL_TO_SCRAP.replace(
@@ -27,12 +26,7 @@ if __name__ == '__main__':
     
     # Date utils variables
     script_execution_datetime = datetime.now()
-    formatted_date_time = script_execution_datetime.strftime("%Y-%m-%d")
-    file_name_date_time = script_execution_datetime.strftime("%Y-%m-%d_%H-%M")
-    year_month = script_execution_datetime.strftime("%Y-%m")
-    monthly_jobs_list_json = f'{year_month}_jobs_list.json'
-    daily_jobs_file_name = f'{file_name_date_time}_{config.JOB_TO_SCRAP}.json'
-
+    
     logger.info(f'Scrapping {config.JOB_TO_SCRAP} jobs')
     
     # ------------------------------------------------------------------------------------------------------------------
@@ -64,8 +58,6 @@ if __name__ == '__main__':
     # Interact with DataStats
     # ------------------------------------------------------------------------------------------------------------------
 
-
- 
     datastats = DataStats(
         script_execution_datetime=script_execution_datetime, 
         job_to_scrap=config.JOB_TO_SCRAP,

@@ -8,7 +8,7 @@ class DataStats:
             self, 
             script_execution_datetime: str,
             job_to_scrap: str,
-            config: str
+            config 
         ) -> None:
         """
         Class to interact with DataStats resources. 
@@ -29,10 +29,11 @@ class DataStats:
         
         # Set variables
         self.formatted_date_time = script_execution_datetime.strftime("%Y-%m-%d_%H-%M")
-        self.year_month = script_execution_datetime.strftime("%Y-%m")
-        self.monthly_jobs_list_json = f'{self.year_month}_jobs_list.json'
-        self.daily_jobs_csv = f'{self.formatted_date_time}_{job_to_scrap}.csv'
         self.today = script_execution_datetime.strftime("%Y-%m-%d")
+        self.year_month = script_execution_datetime.strftime("%Y-%m")
+        file_name_date_time = script_execution_datetime.strftime("%Y-%m-%d_%H-%M")
+        self.daily_jobs_file_name = f'{file_name_date_time}_{config.JOB_TO_SCRAP}.json'
+        self.monthly_jobs_list_json = f'{self.year_month}_jobs_list.json'
         self.config = config
         self.gcp = GoogleUtils()
         

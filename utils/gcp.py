@@ -11,11 +11,11 @@ class GoogleUtils:
 
     @staticmethod
     def upload_file(
-            bucket_name: str, 
-            source_file_path: str, 
-            destination_blob_name: str, 
-            folder_path: str = ""
-        ) -> None:
+        bucket_name: str, 
+        source_file_path: str, 
+        destination_blob_name: str, 
+        folder_path: str = ""
+    ) -> None:
         """
         Upload a file to a GCP bucket. 
 
@@ -46,10 +46,10 @@ class GoogleUtils:
     
     @staticmethod
     def file_exists(
-            bucket_name: str, 
-            blob_name: str, 
-            folder_path: str = ""
-        ) -> bool:
+        bucket_name: str, 
+        blob_name: str, 
+        folder_path: str = ""
+    ) -> bool:
         """
         Check if a file exists in a GCP bucket.
 
@@ -79,12 +79,12 @@ class GoogleUtils:
         
     @staticmethod
     def upload_non_physical_file(
-            bucket_name: str,
-            data: str,
-            destination_blob_name: str,
-            content_type: str,
-            folder_path: str = ""
-        ) -> None:
+        bucket_name: str,
+        data: str,
+        destination_blob_name: str,
+        content_type: str,
+        folder_path: str = ""
+    ) -> None:
         """
         Upload a non-physical file (e.g., JSON, CSV, TXT) to a GCP bucket.
 
@@ -117,11 +117,11 @@ class GoogleUtils:
             
     @staticmethod
     def download_blob(
-            bucket_name: str, 
-            source_blob_name: str, 
-            destination_file_name: str,
-            folder_path: str = ""
-        ) -> None:
+        bucket_name: str, 
+        source_blob_name: str, 
+        destination_file_name: str,
+        folder_path: str = ""
+    ) -> None:
         """Downloads a blob from a bucket.
         
         Parameters

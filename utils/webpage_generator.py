@@ -144,10 +144,10 @@ class WebpageGenerator():
                     return webpage
                 
     def start(
-            self, url: str, 
-            scrolls: int = 3, 
-            max_attempts: int = 50
-        ):
+        self, url: str, 
+        scrolls: int = 3, 
+        max_attempts: int = 50
+    ):
         """
         Start the whole process, including initialization and webpage generation.
 

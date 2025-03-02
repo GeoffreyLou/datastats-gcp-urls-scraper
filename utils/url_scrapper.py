@@ -3,10 +3,10 @@ from bs4 import BeautifulSoup
 
 class UrlScraper:
     def __init__(
-            self, 
-            webpage: str, 
-            job_to_scrap: str
-        ) -> None:
+        self, 
+        webpage: str, 
+        job_to_scrap: str
+    ) -> None:
         """
         Generate a soup from a Selenium webpage then scrap job informations
         
