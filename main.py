@@ -1,13 +1,11 @@
-import os
+
 import sys
-import json
 from loguru import logger
 from datetime import datetime
-from dotenv import load_dotenv
-from utils.gcp import GoogleUtils
-from utils.datastats import DataStats
 from utils.webpage_generator import WebpageGenerator
 from utils.url_scrapper import UrlScraper
+from utils.config_loader import Config
+from utils.datastats import DataStats
 
 if __name__ == '__main__':
 
@@ -15,25 +13,16 @@ if __name__ == '__main__':
     # Set config & env vars
     # ------------------------------------------------------------------------------------------------------------------
     
-    # ENV variables
-    load_dotenv()  
-    job_to_scrap = os.getenv('JOB_TO_SCRAP')
-    bucket_name = os.getenv('DATASTATS_BUCKET')
-    url_to_scrap = os.getenv('URL_TO_SCRAP')
+    try:
+        config = Config.load()
+    except EnvironmentError as e:
+        logger.error(f'Error while generating config: {e}')
+        sys.exit(0)
     
-    config = {
-        'job_to_scrap': job_to_scrap,
-        'bucket_name': bucket_name,
-        'url_to_scrap': url_to_scrap
-    }
-    
-    if any(value is None for value in config.values()):
-        logger.error(f'Missing environment variables: {config}')
-        sys.exit(1)
-     
+        
     # Formatted variables 
-    url_to_scrap = url_to_scrap.replace(
-        'JOB_TO_SCRAP', job_to_scrap.replace(' ', '%20')                       # Same url for any job to scrape
+    url_to_scrap = config.URL_TO_SCRAP.replace(
+        'JOB_TO_SCRAP', config.JOB_TO_SCRAP.replace(' ', '%20')                
     ) 
     
     # Date utils variables
@@ -42,9 +31,9 @@ if __name__ == '__main__':
     file_name_date_time = script_execution_datetime.strftime("%Y-%m-%d_%H-%M")
     year_month = script_execution_datetime.strftime("%Y-%m")
     monthly_jobs_list_json = f'{year_month}_jobs_list.json'
-    daily_jobs_file_name = f'{file_name_date_time}_{job_to_scrap}.json'
+    daily_jobs_file_name = f'{file_name_date_time}_{config.JOB_TO_SCRAP}.json'
 
-    logger.info(f'Scrapping {job_to_scrap} jobs')
+    logger.info(f'Scrapping {config.JOB_TO_SCRAP} jobs')
     
     # ------------------------------------------------------------------------------------------------------------------
     # Selenium webpage generation
@@ -52,8 +41,8 @@ if __name__ == '__main__':
 
     try:
         logger.info('Generating webpage...')
-        webpage_generator = WebpageGenerator(headless=True)                    # Class instance to generate webpage  
-        webpage = webpage_generator.start(url=url_to_scrap)                    # Generate the webpage
+        webpage_generator = WebpageGenerator(headless=True)                   
+        webpage = webpage_generator.start(url=url_to_scrap)                    
     except Exception as e:
         logger.error(f"Error while trying to generate webpage: {e}")
         raise e
@@ -63,10 +52,10 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------------------------------------------------
 
     try:
-        logger.info('Scraping urls...')
-        url_scrapper = UrlScraper(webpage=webpage, job_to_scrap=job_to_scrap)  # Class instance to scrape urls
-        urls_list = url_scrapper.generate_urls_list()                          # Generate list of urls      
-        jobs_list = url_scrapper.get_jobs_list()                               # Get the jobs list scraped for statistic purpose
+        logger.info('Scraping urls and generating jobs list...')
+        url_scrapper = UrlScraper(webpage=webpage, job_to_scrap=config.JOB_TO_SCRAP) 
+        urls_list = url_scrapper.generate_urls_list()                              
+        jobs_list = url_scrapper.get_jobs_list()                               
     except Exception as e:
         logger.error(f"Error while scraping with BeautifulSoup: {e}")
         raise e
@@ -75,15 +64,17 @@ if __name__ == '__main__':
     # Interact with DataStats
     # ------------------------------------------------------------------------------------------------------------------
 
+
+ 
     datastats = DataStats(
         script_execution_datetime=script_execution_datetime, 
-        job_to_scrap=job_to_scrap
-    )
+        job_to_scrap=config.JOB_TO_SCRAP,
+        config=config
+        )
     
-    datastats.add_scraped_jobs_to_monhtly_list(
-        bucket_name=bucket_name, 
-        jobs_list=jobs_list
-    )
+    datastats.start_workflow()
+    
+    #datastats.add_scraped_jobs_to_monhtly_list(bucket_name=bucket_name, jobs_list=jobs_list)
 
     # TODO : Ajouter la logique pour :
     # - Vérifier si le json est présent dans le bucket
@@ -100,7 +91,7 @@ if __name__ == '__main__':
         print(job_to_scrap)
         print(jobs_scraped)
         print(jobs_scraped_matched)
-        print(script_duration)     """
+        print(script_duration)     
         
     
     if len(urls_list) > 0:
@@ -131,3 +122,4 @@ if __name__ == '__main__':
             raise e
     else:
         logger.warning(f'No jobs have been scraped and matched with {job_to_scrap}.')
+    """

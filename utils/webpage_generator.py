@@ -20,7 +20,7 @@ class WebpageGenerator():
         
         # Generate a random user agent
         user_agent = UserAgent().random
-
+        
         window_sizes = [
             "1920,1080",  # Full HD
             "2560,1440",  # QHD (2K)
@@ -71,7 +71,7 @@ class WebpageGenerator():
 
         Returns
         -------
-        None
+            None
         """
         
         try:
@@ -98,7 +98,7 @@ class WebpageGenerator():
         max_attempts: int [optional]
             max attempts to generate webpage, default to 50
 
-        Returns 
+        Returns
         -------
         webpage: str
             the webpage code as string
@@ -160,7 +160,7 @@ class WebpageGenerator():
         max_attempts: int [optional]
             max attempts to generate webpage, default to 50
 
-        Returns 
+        Returns
         -------
         webpage: str
             html code of the webpage

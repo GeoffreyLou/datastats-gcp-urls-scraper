@@ -22,13 +22,13 @@ class GoogleUtils:
         Parameters
         ----------
         bucket_name: str
-            name of the bucket
+            Name of the bucket
         source_file_path: str
-            local path of the file to upload
+            Local path of the file to upload
         destination_blob_name: str
-            name of the file in the bucket
+            Name of the file in the bucket
         folder_path: str
-            optional, the path of the blob in the bucket
+            Optional, the path of the blob in the bucket
         
         Returns
         -------
@@ -56,15 +56,16 @@ class GoogleUtils:
         Parameters
         ----------
         bucket_name: str
-            name of the bucket
+            Name of the bucket
         blob_name: str
-            name of the file in the bucket
+            Name of the file in the bucket
         folder_path: str
-            optional, the path of the blob in the bucket
+            Optional, the path of the blob in the bucket
 
         Returns
         -------
-        bool: True if the file exists else False
+        bool
+            True if the file exists else False
         """
         try:
             blob_path = folder_path + blob_name if folder_path else blob_name
@@ -90,15 +91,15 @@ class GoogleUtils:
         Parameters
         ----------
         bucket_name: str 
-            name of the bucket
+            Name of the bucket
         data: str
-            data to upload as a string
+            Data to upload as a string
         destination_blob_name: str
-            name of the file in the bucket
+            Name of the file in the bucket
         content_type: str
-            content type of the file (e.g., 'application/json', 'text/csv')
+            Content type of the file (e.g., 'application/json', 'text/csv')
         folder_path: str
-            optional, the path of the blob in the bucket
+            Optional, the path of the blob in the bucket
 
         Returns
         -------
@@ -126,13 +127,13 @@ class GoogleUtils:
         Parameters
         ----------
         bucket_name: str
-            name of the bucket
+            Name of the bucket
         source_blob_name: str
-            name of the blob to download
+            Name of the blob to download
         destination_file_name: str
-            name of the file to download from the bucket 
+            Name of the file to download from the bucket 
         folder_path: str
-            optional, the path of the blob in the bucket
+            Optional, the path of the blob in the bucket
 
         Returns
         -------

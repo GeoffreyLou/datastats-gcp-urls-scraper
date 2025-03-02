@@ -1,7 +1,5 @@
-import pandas as pd
 from loguru import logger
 from bs4 import BeautifulSoup
-from .dataframe_maker import DataFrameMaker
 
 class UrlScraper:
     def __init__(
@@ -15,9 +13,9 @@ class UrlScraper:
         Parameters
         ----------
         webpage: str
-            the webpage from Selenium webdriver
+            The webpage from Selenium webdriver
         job_to_scrap: str
-            the job name that will be scraped
+            The job name that will be scraped
 
         Returns
         -------
@@ -35,7 +33,7 @@ class UrlScraper:
         Returns
         -------
         jobs_list: list
-            a list containing each job on the webpage soup
+            A list containing each job on the webpage soup
         """
         try:
             jobs_list = self.soup.find(
@@ -55,12 +53,12 @@ class UrlScraper:
         Parameters
         ----------
         job_html_element: str
-            the html element to get information from
+            The html element to get information from
 
         Returns
         -------
         element: str
-            the lower job name from html element
+            The lower job name from html element
         """
         try:
             element = job_html_element.find(
@@ -79,7 +77,7 @@ class UrlScraper:
         Parameters
         ----------
         job_html_element: str
-            the html element to get information from
+            tTe html element to get information from
 
         Returns
         -------
@@ -100,7 +98,7 @@ class UrlScraper:
         Returns
         -------
         urls_list: list
-            a list containing each link related to jobs scrapped
+            A list containing each link related to jobs scrapped
         """
         try:
             self.jobs_list = self._generate_jobs_list()
@@ -136,6 +134,6 @@ class UrlScraper:
         Returns
         -------
         jobs_list: list
-            a list containing each job on the webpage soup
+            A list containing each job on the webpage soup
         """
         return self.formatted_jobs_list 
