@@ -1,12 +1,14 @@
 import json
 from loguru import logger
 from .gcp import GoogleUtils
+from .pg_utils import PostgresUtils
 
 class DataStats:
     def __init__(
             self, 
             script_execution_datetime: str,
             job_to_scrap: str,
+            config 
         ) -> None:
         """
         Class to interact with DataStats resources. 
@@ -27,18 +29,49 @@ class DataStats:
         
         # Set variables
         self.formatted_date_time = script_execution_datetime.strftime("%Y-%m-%d_%H-%M")
-        self.year_month = script_execution_datetime.strftime("%Y-%m")
-        self.monthly_jobs_list_json = f'{self.year_month}_jobs_list.json'
-        self.daily_jobs_csv = f'{self.formatted_date_time}_{job_to_scrap}.csv'
         self.today = script_execution_datetime.strftime("%Y-%m-%d")
-        
+        self.year_month = script_execution_datetime.strftime("%Y-%m")
+        file_name_date_time = script_execution_datetime.strftime("%Y-%m-%d_%H-%M")
+        self.daily_jobs_file_name = f'{file_name_date_time}_{config.JOB_TO_SCRAP}.json'
+        self.monthly_jobs_list_json = f'{self.year_month}_jobs_list.json'
+        self.config = config
         self.gcp = GoogleUtils()
+        
+    def _generate_pg_instance(self):
+        """
+        Crea te a PostgresUtils instance to be used in the class
+        """
+        try:
+            self.pg = PostgresUtils()
+            return self.pg
+        except Exception as e:
+            logger.error(f'Error while generating PostGresUtils instance: {e}')
+        
+    def _set_pg_connection(self):
+        """
+        Set up the connection to Postgres SQL instance.
+        The config from class init will be used as args.  
+        """
+        try:
+            self.conn = self.pg.connect_with_ssl(
+                db_host=self.config.DB_HOST,
+                db_user=self.config.DB_USER,
+                db_password=self.config.DB_USER_PASSWORD,
+                db_name=self.config.DB_NAME,
+                db_port=self.config.DB_PORT,
+                db_root_cert=self.config.DB_ROOT_CERT,
+                db_cert=self.config.DB_CERT,
+                db_key=self.config.DB_KEY
+            ) 
+            return self.conn
+        except Exception as e:
+            logger.error(f'Error while setting up Postgres connection: {e}')
     
     def add_scraped_jobs_to_monhtly_list(
-            self, 
-            bucket_name: str, 
-            jobs_list: list
-        ) -> None:
+        self, 
+        bucket_name: str, 
+        jobs_list: list
+    ) -> None:
         """
         Add the scraped jobs to the monthly list.
         
@@ -55,7 +88,6 @@ class DataStats:
         """
         
         try:
-            logger.debug(f'Jobs list: {jobs_list}')
             logger.info('Adding scraped jobs to monthly list...')
             # Check if the file exists
             file_exists = self.gcp.file_exists(
@@ -96,5 +128,24 @@ class DataStats:
             logger.error(f"Error when adding jobs to monthly list: {e}")
             raise e  
              
-        #  add_row_to_pgsql()
-        #
+    def _create_urls_statistics_table(self):
+        pg = self._generate_pg_instance()
+        conn = self._set_pg_connection()
+        
+        schema = {
+            'ID': 'SERIAL PRIMARY KEY',
+            'TEST': 'VARCHAR(40)'
+        }
+        
+        pg.create_table_if_not_exists(
+            connection=conn,
+            table_name='URLS_SCRAPPER_STATS',
+            table_schema=schema
+        )
+    
+    def start_workflow(self):
+        try:
+            logger.debug('bla')
+            self._create_urls_statistics_table()
+        except Exception as e:
+            logger.error(f'blabla: {e}')
