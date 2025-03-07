@@ -11,24 +11,24 @@ class GoogleUtils:
 
     @staticmethod
     def upload_file(
-            bucket_name: str, 
-            source_file_path: str, 
-            destination_blob_name: str, 
-            folder_path: str = ""
-        ) -> None:
+        bucket_name: str, 
+        source_file_path: str, 
+        destination_blob_name: str, 
+        folder_path: str = ""
+    ) -> None:
         """
         Upload a file to a GCP bucket. 
 
         Parameters
         ----------
         bucket_name: str
-            name of the bucket
+            Name of the bucket
         source_file_path: str
-            local path of the file to upload
+            Local path of the file to upload
         destination_blob_name: str
-            name of the file in the bucket
+            Name of the file in the bucket
         folder_path: str
-            optional, the path of the blob in the bucket
+            Optional, the path of the blob in the bucket
         
         Returns
         -------
@@ -46,25 +46,26 @@ class GoogleUtils:
     
     @staticmethod
     def file_exists(
-            bucket_name: str, 
-            blob_name: str, 
-            folder_path: str = ""
-        ) -> bool:
+        bucket_name: str, 
+        blob_name: str, 
+        folder_path: str = ""
+    ) -> bool:
         """
         Check if a file exists in a GCP bucket.
 
         Parameters
         ----------
         bucket_name: str
-            name of the bucket
+            Name of the bucket
         blob_name: str
-            name of the file in the bucket
+            Name of the file in the bucket
         folder_path: str
-            optional, the path of the blob in the bucket
+            Optional, the path of the blob in the bucket
 
         Returns
         -------
-        bool: True if the file exists else False
+        bool
+            True if the file exists else False
         """
         try:
             blob_path = folder_path + blob_name if folder_path else blob_name
@@ -78,27 +79,27 @@ class GoogleUtils:
         
     @staticmethod
     def upload_non_physical_file(
-            bucket_name: str,
-            data: str,
-            destination_blob_name: str,
-            content_type: str,
-            folder_path: str = ""
-        ) -> None:
+        bucket_name: str,
+        data: str,
+        destination_blob_name: str,
+        content_type: str,
+        folder_path: str = ""
+    ) -> None:
         """
         Upload a non-physical file (e.g., JSON, CSV, TXT) to a GCP bucket.
 
         Parameters
         ----------
         bucket_name: str 
-            name of the bucket
+            Name of the bucket
         data: str
-            data to upload as a string
+            Data to upload as a string
         destination_blob_name: str
-            name of the file in the bucket
+            Name of the file in the bucket
         content_type: str
-            content type of the file (e.g., 'application/json', 'text/csv')
+            Content type of the file (e.g., 'application/json', 'text/csv')
         folder_path: str
-            optional, the path of the blob in the bucket
+            Optional, the path of the blob in the bucket
 
         Returns
         -------
@@ -116,23 +117,23 @@ class GoogleUtils:
             
     @staticmethod
     def download_blob(
-            bucket_name: str, 
-            source_blob_name: str, 
-            destination_file_name: str,
-            folder_path: str = ""
-        ) -> None:
+        bucket_name: str, 
+        source_blob_name: str, 
+        destination_file_name: str,
+        folder_path: str = ""
+    ) -> None:
         """Downloads a blob from a bucket.
         
         Parameters
         ----------
         bucket_name: str
-            name of the bucket
+            Name of the bucket
         source_blob_name: str
-            name of the blob to download
+            Name of the blob to download
         destination_file_name: str
-            name of the file to download from the bucket 
+            Name of the file to download from the bucket 
         folder_path: str
-            optional, the path of the blob in the bucket
+            Optional, the path of the blob in the bucket
 
         Returns
         -------

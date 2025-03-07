@@ -12,5 +12,5 @@ dependencies = [
     "pandas",
     "python-dotenv",
     "google-cloud-storage",
-    "psycopg2-binary"
+    "pg8000",
 ]
