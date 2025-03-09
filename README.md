@@ -26,6 +26,7 @@ Here's the architecture around this repository :
 
 ![Urls Scrapper global architecture](images/urls_scrapper.png)
 
+
 ## 📁 Repository tree
 
 ```shell
