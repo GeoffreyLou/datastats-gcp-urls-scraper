@@ -3,15 +3,12 @@ import tempfile
 import pg8000.dbapi
 from loguru import logger
 
-class PostgresUtils():
-    def __init__(self) -> None:
-        """
-        This class is used to interact with Postgres Cloud SQL on GCP
-        """
+class PostgresUtils:
+    def __init__(self):
         pass
     
     def _generate_temp_pem_file(
-        self, 
+        self,
         value:str
     ) -> str:
         """
@@ -36,8 +33,8 @@ class PostgresUtils():
         except Exception as e:
             logger.error(f'Failed to generate temp file: {e}')
     
-    def _generate_ssl_args(
-        self, 
+    def _generate_ssl_args( 
+        self,
         db_root_cert: str, 
         db_cert: str, 
         db_key: str
@@ -62,7 +59,7 @@ class PostgresUtils():
         """
         connect_args = {}
         
-        try:
+        try:            
             ssl_context = ssl.SSLContext()
             ssl_context.verify_mode = ssl.CERT_REQUIRED
             ssl_context.load_verify_locations(db_root_cert)
@@ -70,7 +67,7 @@ class PostgresUtils():
             connect_args["ssl_context"] = ssl_context
             return connect_args
         except Exception as e:
-            logger.error(f'Failed to veryfi SSL elements: {e}')
+            logger.error(f'Failed to verify SSL elements: {e}')
     
     def connect_with_ssl(
         self,
@@ -132,7 +129,7 @@ class PostgresUtils():
             return connection
         except Exception as e:
             logger.error(f'Failed to establish connection: {e}')
-            
+            raise e        
 
     def create_table_if_not_exists(
         self, 
@@ -165,6 +162,42 @@ class PostgresUtils():
             cursor.execute(sql_statement)
             connection.commit()
             cursor.close()
-            logger.info(f"Table '{table_name}' created successfully or already exists.")
         except Exception as e:
             logger.error(f"Failed to create table '{table_name}': {e}")
+            raise e
+        
+    def insert_data(
+        self, 
+        connection: pg8000.dbapi.Connection, 
+        table_name: str, 
+        data: dict
+    ) -> None:
+        """
+        Insert data into a table in the Postgres database.
+
+        Parameters
+        ----------
+        connection: pg8000.dbapi.Connection
+            The connection object to the Postgres database
+        table_name: str
+            The name of the table to insert data into
+        data: dict
+            A dictionary where keys are column names and values are the data to insert
+
+        Returns
+        -------
+        None
+        """
+        try:
+            # Construct the SQL statement for inserting data
+            columns = ", ".join(data.keys())
+            values = ", ".join([f"'{value}'" if type(value) == str else str(value) for value in data.values()])
+            sql_statement = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
+
+            cursor = connection.cursor()
+            cursor.execute(sql_statement)
+            connection.commit()
+            cursor.close()
+        except Exception as e:
+            logger.error(f"Failed to insert data into '{table_name}': {e}")
+            raise e
