@@ -1,7 +1,7 @@
 from loguru import logger
 from bs4 import BeautifulSoup
 
-class UrlScraper:
+class UrlsScraper:
     def __init__(
         self, 
         webpage: str, 
