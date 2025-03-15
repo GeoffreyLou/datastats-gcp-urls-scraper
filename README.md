@@ -53,3 +53,9 @@ datastats-gcp-urls-scraper/
 ├── README.md
 └── uv.lock
 ```
+
+
+## 💡 What's next ? 
+
+What will be added to this repository?
+- Tests 
