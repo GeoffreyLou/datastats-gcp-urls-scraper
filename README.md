@@ -54,6 +54,7 @@ datastats-gcp-urls-scraper/
 └── uv.lock
 ```
 
+
 ## 💡 What's next ? 
 
 What will be added to this repository?
