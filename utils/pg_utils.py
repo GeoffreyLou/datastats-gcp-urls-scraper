@@ -201,3 +201,24 @@ class PostgresUtils:
         except Exception as e:
             logger.error(f"Failed to insert data into '{table_name}': {e}")
             raise e
+        
+    def close_connection(self, connection: pg8000.dbapi.Connection) -> None:
+        """
+        Close the connection to the Postgres database.
+        
+        Parameters
+        ----------
+        connection: pg8000.dbapi.Connection
+            The connection object to the Postgres database
+        
+        Returns
+        -------
+        None
+        """
+        try:
+            if connection is not None:
+                connection.close()
+                logger.success('Connection successfully closed.')
+        except Exception as e:
+            logger.error(f'Failed to close connection: {e}')
+            raise e

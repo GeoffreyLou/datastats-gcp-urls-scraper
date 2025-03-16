@@ -22,7 +22,7 @@ if __name__ == '__main__':
         config = Config.load()
     except EnvironmentError as e:
         logger.error(f'Error while generating config: {e}')
-        sys.exit(0)
+        sys.exit(1)
         
     # Formatted variables 
     url_to_scrap = config.URL_TO_SCRAP.replace(
