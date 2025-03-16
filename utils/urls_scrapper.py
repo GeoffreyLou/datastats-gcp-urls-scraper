@@ -106,25 +106,16 @@ class UrlsScraper:
                 lower_job_name = self._get_lower_job_name(job)
                 self.formatted_jobs_list.append(lower_job_name)
                 if self.job_to_scrap in lower_job_name:
-                    try:
-                        logger.success(f"{lower_job_name} will be scraped because it DOES match: {self.job_to_scrap}.")        
-                        self.link = self._get_link(job)
-                    except Exception as e:
-                        logger.error(f'Error while getting job link: {e}')
-                        raise e
-                    
                     # Adding scraped data to the url list
                     # The job will be added only if it matches job search
-                    try:
-                        self.urls_list.append(self.link)
-                    except Exception as e:
-                        logger.error(f'Error when append in url dict: {e}')
-                        raise e
+                    logger.success(f"{lower_job_name} will be scraped because it DOES match: {self.job_to_scrap}.")        
+                    self.link = self._get_link(job)
+                    self.urls_list.append(self.link)
                 else:
                     logger.warning(f"{lower_job_name} won't be scraped because it DOES NOT match : {self.job_to_scrap}.")
             return self.urls_list
         except Exception as e:
-            logger.error(f'Error while starting scraping : {e}')
+            logger.error(f'Error while scraping : {e}')
             return self.urls_list   
     
     def get_jobs_list(self):

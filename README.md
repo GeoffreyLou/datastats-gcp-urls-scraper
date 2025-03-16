@@ -5,7 +5,7 @@ This repository is a part of <strong>Datastats</strong> x <strong>GCP</strong> p
 
 ## ✨ Datastats x GCP purpose
 
-The aim of this project is to retrieve daily job offers in the data professions in order to monitor market trends and the technologies in demand. 
+The purpose of this project is to retrieve daily job offers in the data professions to monitor market trends and the technologies in demand. 
 
 
 ## 🤔 What is Urls Scrapper ?
@@ -17,11 +17,9 @@ This architecture enables the container to operate independently and autonomousl
 
 ## 👷🏻‍♀️ Architecture
 
-Here's the architecture around this repository : 
-- A Cloud Scheduler triggers a Workflow.
-- The Workflow creates a Serverless Connector to allow Cloud Run Jobs to interact securely with Cloud SQL (without a public address).
-- It then retrieves the jobs to scrape, and for each job, a Cloud Run instance is created.
-- Each Cloud Run Job uploads a file containing URLs related to the scraped Data Job, which will be processed by another service.
+- A Cloud Scheduler triggers a Workflow and passes the job to scrape as an environment variable.
+- The Cloud Run Job scrapes job offer websites and stores URLs in two lists: one with all scraped jobs and one with only the jobs that match the specified variable.
+- The lists are stored in JSON files and uploaded to buckets according to their purpose: one will be used by another Cloud Run Job to deduplicate and retrieve job information, and the other will be analyzed at the end of the month by a Large Language Model (LLM) to add new jobs to scrape.
 - Additionally, statistical data is inserted into an SQL table to monitor scraping performance.
 
 ![Urls Scrapper global architecture](images/urls_scrapper.png)
