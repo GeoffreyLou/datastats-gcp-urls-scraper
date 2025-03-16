@@ -173,20 +173,14 @@ class DataStats:
                 db_cert=self.config.DB_CERT,
                 db_key=self.config.DB_KEY            
             )
-        except Exception as e:
-            logger.error(f'Error while setting connection to pgsql: {e}')
         
-        try:
             logger.info('Checking if urls statistics table exists or create it...')
             pg.create_table_if_not_exists(
                 connection=conn,
                 table_name=self.urls_scrapper_statistics_table_name,
                 table_schema=self.urls_scrapper_statistics_table_schema
             )
-        except Exception as e:
-            logger.error(f'Failed to create urls statistics table: {e}')
         
-        try:
             logger.info('Inserting statistics data...')
             script_duration = self._set_script_execution_duration()
             pg.insert_data(
@@ -200,30 +194,21 @@ class DataStats:
                     'SCRAP_DURATION': script_duration
                 }
             )
-        except Exception as e:
-            logger.error(f'Failed to insert statistics data: {e}')  
             
-        try:
             logger.info('Adding scraped jobs to monthly list...')
             self.add_scraped_jobs_to_monhtly_list(
                 bucket_name=self.config.DATASTATS_BUCKET_UTILS,
                 jobs_list=self.scrapped_jobs_list
             )
-        except Exception as e:
-            logger.error(f'Failed to add scraped jobs to monthly list: {e}')
             
-        if len(self.matched_jobs_list) > 0:  
-            try:
+            if len(self.matched_jobs_list) > 0:  
                 logger.info('Generating JSON to upload...')
                 json_data = self.generate_json_to_upload(
                     job_to_scrap=self.config.JOB_TO_SCRAP,
                     date=self.today,
                     urls_list=self.matched_jobs_list
                 )
-            except Exception as e:
-                logger.error(f'Failed to generate JSON: {e}')
-                
-            try:
+
                 logger.info(f'Uploading {self.daily_jobs_file_name} to GCP...')
                 gcp = GoogleUtils()
                 gcp.upload_non_physical_file(
@@ -232,7 +217,14 @@ class DataStats:
                     destination_blob_name=self.daily_jobs_file_name,
                     content_type='application/json'
                 )
-            except Exception as e:
-                logger.error(f'Failed to upload JSON to GCP: {e}')
-        else:
-            logger.warning(f'No jobs have been scraped and matched with {self.config.JOB_TO_SCRAP}.')
+            else:
+                logger.warning(f'No jobs have been scraped and matched with {self.config.JOB_TO_SCRAP}.')
+                
+        except Exception as e:
+            logger.error(f'Error while executing Datastats workflow: {e}')
+            raise e
+        
+        finally:
+            if conn is not None:
+                logger.info('Closing connection to pgsql...')
+                pg.close_connection(conn)
