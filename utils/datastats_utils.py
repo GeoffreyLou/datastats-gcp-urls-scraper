@@ -41,18 +41,28 @@ class DataStats:
         file_name_date_time = script_execution_start_time.strftime("%Y-%m-%d_%H-%M")
         self.daily_jobs_file_name = f'{file_name_date_time}_{config.JOB_TO_SCRAP}.json'
         self.monthly_jobs_list_json = f'{self.year_month}_jobs_list.json'
-        self.config = config
+        self.db_host = config.DB_HOST
+        self.db_user = config.DB_USER
+        self.db_password = config.DB_USER_PASSWORD
+        self.db_name = config.DB_NAME
+        self.db_port = config.DB_PORT
+        self.db_root_cert = config.DB_ROOT_CERT
+        self.db_cert = config.DB_CERT
+        self.db_key = config.DB_KEY
+        self.job_to_scrap = config.JOB_TO_SCRAP
+        self.datastats_bucket_urls = config.DATASTATS_BUCKET_URLS
+        self.datastats_bucket_utils = config.DATASTATS_BUCKET_UTILS
         
         self.scrapped_jobs_list = scraped_jobs_list
         self.matched_jobs_list = matched_jobs_list
         self.urls_scrapper_statistics_table_name = 'urls_scrapper_statistics'
         self.urls_scrapper_statistics_table_schema = {
-            'ID': 'SERIAL PRIMARY KEY',
-            'SCRAP_DATE': 'VARCHAR(40)',
-            'JOB_TO_SCRAP': 'VARCHAR(60)',
-            'JOBS_SCRAPED': 'INTEGER',
-            'JOBS_SCRAPED_MATCHED': 'INTEGER',
-            'SCRAP_DURATION': 'VARCHAR(60)'
+            'id': 'SERIAL PRIMARY KEY',
+            'scrap_date': 'VARCHAR(40)',
+            'job_to_scrap': 'VARCHAR(60)',
+            'jobs_scraped': 'INTEGER',
+            'jobs_scraped_matched': 'INTEGER',
+            'scrap_duration': 'VARCHAR(60)'
         }
     
     def _set_script_execution_duration(self):
@@ -164,14 +174,14 @@ class DataStats:
             logger.info('Setting connection to pgsql...')
             pg = PostgresUtils()  
             conn = pg.connect_with_ssl(
-                db_host=self.config.DB_HOST,
-                db_user=self.config.DB_USER,
-                db_password=self.config.DB_USER_PASSWORD,
-                db_name=self.config.DB_NAME,
-                db_port=self.config.DB_PORT,
-                db_root_cert=self.config.DB_ROOT_CERT,
-                db_cert=self.config.DB_CERT,
-                db_key=self.config.DB_KEY            
+                db_host=self.db_host,
+                db_user=self.db_user,
+                db_password=self.db_password,
+                db_name=self.db_name,
+                db_port=self.db_port,
+                db_root_cert=self.db_root_cert,
+                db_cert=self.db_cert,
+                db_key=self.db_key            
             )
         
             logger.info('Checking if urls statistics table exists or create it...')
@@ -188,7 +198,7 @@ class DataStats:
                 table_name=self.urls_scrapper_statistics_table_name,
                 data={
                     'SCRAP_DATE': self.today,
-                    'JOB_TO_SCRAP': self.config.JOB_TO_SCRAP,
+                    'JOB_TO_SCRAP': self.job_to_scrap,
                     'JOBS_SCRAPED': len(self.scrapped_jobs_list),
                     'JOBS_SCRAPED_MATCHED': len(self.matched_jobs_list),
                     'SCRAP_DURATION': script_duration
@@ -197,14 +207,14 @@ class DataStats:
             
             logger.info('Adding scraped jobs to monthly list...')
             self.add_scraped_jobs_to_monhtly_list(
-                bucket_name=self.config.DATASTATS_BUCKET_UTILS,
+                bucket_name=self.datastats_bucket_utils,
                 jobs_list=self.scrapped_jobs_list
             )
             
             if len(self.matched_jobs_list) > 0:  
                 logger.info('Generating JSON to upload...')
                 json_data = self.generate_json_to_upload(
-                    job_to_scrap=self.config.JOB_TO_SCRAP,
+                    job_to_scrap=self.job_to_scrap,
                     date=self.today,
                     urls_list=self.matched_jobs_list
                 )
@@ -212,13 +222,13 @@ class DataStats:
                 logger.info(f'Uploading {self.daily_jobs_file_name} to GCP...')
                 gcp = GoogleUtils()
                 gcp.upload_non_physical_file(
-                    bucket_name=self.config.DATASTATS_BUCKET_URLS,
+                    bucket_name=self.datastats_bucket_urls,
                     data=json_data,
                     destination_blob_name=self.daily_jobs_file_name,
                     content_type='application/json'
                 )
             else:
-                logger.warning(f'No jobs have been scraped and matched with {self.config.JOB_TO_SCRAP}.')
+                logger.warning(f'No jobs have been scraped and matched with {self.job_to_scrap}.')
                 
         except Exception as e:
             logger.error(f'Error while executing Datastats workflow: {e}')

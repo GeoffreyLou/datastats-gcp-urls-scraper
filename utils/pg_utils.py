@@ -188,17 +188,32 @@ class PostgresUtils:
         -------
         None
         """
+        
+        # Start a transaction
+        connection.autocommit = False
+        
         try:
             # Construct the SQL statement for inserting data
             columns = ", ".join(data.keys())
-            values = ", ".join([f"'{value}'" if type(value) == str else str(value) for value in data.values()])
-            sql_statement = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
-
+            
+            # Prepare placeholders and values for parameterized query to prevent SQL injection
+            placeholders = ", ".join(["%s"] * len(data))
+            values = list(data.values())
+            
+            # Execute the query with RETURNING id to get the inserted row ID
             cursor = connection.cursor()
-            cursor.execute(sql_statement)
+            cursor.execute(
+                f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders}) RETURNING id", 
+                values
+            )
+            
+            # Get the ID of the inserted row
+            row_id = cursor.fetchone()[0]
             connection.commit()
-            cursor.close()
+            return row_id
+
         except Exception as e:
+            connection.rollback()
             logger.error(f"Failed to insert data into '{table_name}': {e}")
             raise e
         
