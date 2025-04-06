@@ -1,4 +1,4 @@
-
+import io
 from loguru import logger
 from google.cloud import storage
 
@@ -148,3 +148,67 @@ class GoogleUtils:
             logger.success(f"Downloaded storage object {source_blob_name} from bucket {bucket_name} to local file {destination_file_name}.")
         except Exception as e:
             logger.error(f"Error when downloading file: {e}")
+            
+    @staticmethod
+    def download_blob_as_string(
+        bucket_name: str, 
+        source_blob_name: str, 
+        folder_path: str = ""
+    ) -> str:
+        """
+        Downloads a blob from a bucket and returns its content as a string.
+        
+        Parameters
+        ----------
+        bucket_name: str
+            Name of the bucket
+        source_blob_name: str
+            Name of the blob to download
+        folder_path: str
+            Optional, the path of the blob in the bucket
+
+        Returns
+        -------
+        str
+            The content of the blob as a string, or None if an error occurs.
+        """
+        try:
+            blob_path = folder_path + source_blob_name if folder_path else source_blob_name
+            storage_client = storage.Client()
+            bucket = storage_client.bucket(bucket_name)
+            blob = bucket.blob(blob_path)
+
+            blob_content = blob.download_as_bytes()
+            blob_string = blob_content.decode("utf-8")
+
+            logger.success(f"Downloaded storage object {source_blob_name} from bucket {bucket_name} as string.")
+            return blob_string
+        except Exception as e:
+            logger.error(f"Error when downloading file: {e}")
+            return None         
+            
+    @staticmethod        
+    def list_blobs(bucket_name: str) -> list:
+        """
+        Lists all the blobs in the bucket.
+        
+        Parameters
+        ----------
+        bucket_name: str
+            Name of the bucket
+            
+        Returns
+        -------
+        list
+            List of blob names in the bucket
+        """
+        try:
+            blobs_list = []
+            storage_client = storage.Client()
+            blobs = storage_client.list_blobs(bucket_name)
+            for blob in blobs:
+                blobs_list.append(blob.name)
+            return blobs_list
+        except Exception as e:
+            logger.error(f"Error when listing blobs: {e}")
+            return []
