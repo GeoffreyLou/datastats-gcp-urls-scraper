@@ -3,11 +3,13 @@ FROM python:3.11-slim
 COPY . /app
 WORKDIR /app
 
-# Get Chrome and dependencies for Selenium
+# Get Chrome, chromedriver and dependencies for Selenium
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
     ca-certificates \
+    curl \
+    unzip \
     --no-install-recommends \
     && mkdir -p /etc/apt/keyrings \
     && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub \
