@@ -15,6 +15,7 @@ wheels/
 # Local
 *.csv
 *.json
+!src/configs/*.json
 deploy.sh
 local/
 */local/

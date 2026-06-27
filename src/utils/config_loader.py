@@ -17,14 +17,8 @@ class Config:
     DATASTATS_BUCKET_URLS: str
     DATASTATS_BUCKET_UTILS: str
     URL_TO_SCRAP: str
-    DB_NAME: str
-    DB_USER: str
-    DB_PORT: str
-    DB_HOST: str
-    DB_ROOT_CERT: str
-    DB_CERT: str
-    DB_KEY: str
-    DB_USER_PASSWORD: str
+    PROJECT_ID: str
+    BQ_DATASET: str
 
     @classmethod
     def load(cls) -> 'Config':

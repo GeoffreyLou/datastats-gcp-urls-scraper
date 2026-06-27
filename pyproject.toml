@@ -12,6 +12,6 @@ dependencies = [
     "pandas",
     "python-dotenv",
     "google-cloud-storage",
-    "pg8000",
+    "google-cloud-bigquery",
     "google-cloud-logging"
 ]

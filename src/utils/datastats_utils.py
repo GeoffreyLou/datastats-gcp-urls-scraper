@@ -1,23 +1,24 @@
 import os
 import json
 import time
+import uuid
 from loguru import logger
-from datetime import datetime
+from datetime import datetime, timezone
 from .gcp_utils import GoogleUtils
-from .pg_utils import PostgresUtils
+from .bigquery_utils import BigQueryTableManager
 from .config_loader import Config
 
 class DataStats:
     def __init__(
-            self, 
+            self,
             script_execution_start_time: str,
             scraped_jobs_list: list,
             matched_jobs_list: list,
             config: Config
         ) -> None:
         """
-        Class to interact with Datastats project and resources. 
-        
+        Class to interact with Datastats project and resources.
+
         Parameters
         ----------
         script_execution_start_time : str
@@ -28,12 +29,12 @@ class DataStats:
             The list of matched jobs from scraped_jobs_list.
         config: Config
             The config instance containing variables
-        
+
         Returns
         -------
         None
         """
-        
+
         # Set variables
         self.script_execution_start_time = script_execution_start_time
         self.today = script_execution_start_time.strftime("%Y-%m-%d")
@@ -41,30 +42,25 @@ class DataStats:
         file_name_date_time = script_execution_start_time.strftime("%Y-%m-%d_%H-%M")
         self.daily_jobs_file_name = f'{file_name_date_time}_{config.JOB_TO_SCRAP}.json'
         self.monthly_jobs_list_json = f'{self.year_month}_jobs_list.json'
-        self.db_host = config.DB_HOST
-        self.db_user = config.DB_USER
-        self.db_password = config.DB_USER_PASSWORD
-        self.db_name = config.DB_NAME
-        self.db_port = config.DB_PORT
-        self.db_root_cert = config.DB_ROOT_CERT
-        self.db_cert = config.DB_CERT
-        self.db_key = config.DB_KEY
+        self.project_id = config.PROJECT_ID
+        self.bq_dataset = config.BQ_DATASET
         self.job_to_scrap = config.JOB_TO_SCRAP
         self.datastats_bucket_urls = config.DATASTATS_BUCKET_URLS
         self.datastats_bucket_utils = config.DATASTATS_BUCKET_UTILS
-        
+
         self.scrapped_jobs_list = scraped_jobs_list
         self.matched_jobs_list = matched_jobs_list
         self.urls_scrapper_statistics_table_name = 'urls_scrapper_statistics'
-        self.urls_scrapper_statistics_table_schema = {
-            'id': 'SERIAL PRIMARY KEY',
-            'scrap_date': 'VARCHAR(40)',
-            'job_to_scrap': 'VARCHAR(60)',
-            'jobs_scraped': 'INTEGER',
-            'jobs_scraped_matched': 'INTEGER',
-            'scrap_duration': 'VARCHAR(60)'
-        }
-    
+        self.urls_scrapper_statistics_schema = [
+            {'name': 'id', 'type': 'STRING', 'mode': 'REQUIRED', 'description': 'Unique statistics row identifier'},
+            {'name': 'scrap_date', 'type': 'TIMESTAMP', 'mode': 'REQUIRED', 'description': 'Date of the scraping run'},
+            {'name': 'job_to_scrap', 'type': 'STRING', 'mode': 'REQUIRED', 'description': 'Job title that was scraped'},
+            {'name': 'jobs_scraped', 'type': 'INTEGER', 'mode': 'NULLABLE', 'description': 'Number of job offers scraped'},
+            {'name': 'jobs_scraped_matched', 'type': 'INTEGER', 'mode': 'NULLABLE', 'description': 'Number of job offers matching the job title'},
+            {'name': 'scrap_duration', 'type': 'STRING', 'mode': 'NULLABLE', 'description': 'Duration of the scraping run'},
+            {'name': 'created_at', 'type': 'TIMESTAMP', 'mode': 'REQUIRED', 'description': 'Record creation date'}
+        ]
+
     def _set_script_execution_duration(self):
         """
         Set the script execution duration.
@@ -76,36 +72,36 @@ class DataStats:
             return formatted_duration
         except Exception as e:
             logger.error(f'Error while setting script execution duration: {e}')
-    
+
     def add_scraped_jobs_to_monhtly_list(
-        self, 
-        bucket_name: str, 
+        self,
+        bucket_name: str,
         jobs_list: list
     ) -> None:
         """
         Add the scraped jobs to the monthly list.
-        
+
         Parameters
         ----------
         bucket_name : str
             The bucket name to store the data.
         jobs_list : list
             The list of jobs to add to the monthly list.
-            
+
         Returns
         -------
         None
         """
-        
+
         gcp = GoogleUtils()
-        
+
         try:
             # Check if the file exists
             file_exists = gcp.file_exists(
-                bucket_name=bucket_name, 
+                bucket_name=bucket_name,
                 blob_name=self.monthly_jobs_list_json
             )
-            
+
             if file_exists:
                 # Download the file
                 gcp.download_blob(
@@ -117,31 +113,31 @@ class DataStats:
                 # Open the file
                 with open(self.monthly_jobs_list_json, 'r') as f:
                     current_data = json.load(f)
-                    
+
                 # Add the jobs to it
                 current_data["jobs_list"].extend(jobs_list)
-                    
+
             else:
-                # Create the file and add jobs to it 
+                # Create the file and add jobs to it
                 current_data = {"jobs_list": []}
                 current_data["jobs_list"].extend(jobs_list)
-                
-            # Save the file 
+
+            # Save the file
             with open(self.monthly_jobs_list_json, 'w') as f:
-                json.dump(current_data, f, indent=2)       
-                
+                json.dump(current_data, f, indent=2)
+
             # Upload the file
             gcp.upload_file(
                 bucket_name=bucket_name,
                 source_file_path=self.monthly_jobs_list_json,
                 destination_blob_name=self.monthly_jobs_list_json
             )
-            
+
             # Remove the local file
             os.remove(self.monthly_jobs_list_json)
         except Exception as e:
             logger.error(f"Error when adding jobs to monthly list: {e}")
-            raise e  
+            raise e
 
     def generate_json_to_upload(
         self,
@@ -167,51 +163,44 @@ class DataStats:
             raise e
 
     def start_workflow(self):
-        
+
         logger.info('Starting workflow to interact with Datastats resources...')
-        
+
         try:
-            logger.info('Setting connection to pgsql...')
-            pg = PostgresUtils()  
-            conn = pg.connect_with_ssl(
-                db_host=self.db_host,
-                db_user=self.db_user,
-                db_password=self.db_password,
-                db_name=self.db_name,
-                db_port=self.db_port,
-                db_root_cert=self.db_root_cert,
-                db_cert=self.db_cert,
-                db_key=self.db_key            
-            )
-        
+            logger.info('Setting connection to BigQuery...')
+            bq = BigQueryTableManager(project_id=self.project_id, dataset_id=self.bq_dataset)
+
             logger.info('Checking if urls statistics table exists or create it...')
-            pg.create_table_if_not_exists(
-                connection=conn,
+            bq.create_dataset_if_not_exists()
+            bq.create_table_from_schema(
                 table_name=self.urls_scrapper_statistics_table_name,
-                table_schema=self.urls_scrapper_statistics_table_schema
+                schema=self.urls_scrapper_statistics_schema,
+                partition_field='created_at'
             )
-        
+
             logger.info('Inserting statistics data...')
             script_duration = self._set_script_execution_duration()
-            pg.insert_data(
-                connection=conn,
+            now = datetime.now(timezone.utc).isoformat()
+            bq.insert_rows(
                 table_name=self.urls_scrapper_statistics_table_name,
-                data={
-                    'SCRAP_DATE': self.today,
-                    'JOB_TO_SCRAP': self.job_to_scrap,
-                    'JOBS_SCRAPED': len(self.scrapped_jobs_list),
-                    'JOBS_SCRAPED_MATCHED': len(self.matched_jobs_list),
-                    'SCRAP_DURATION': script_duration
-                }
+                rows=[{
+                    'id': str(uuid.uuid4()),
+                    'scrap_date': now,
+                    'job_to_scrap': self.job_to_scrap,
+                    'jobs_scraped': len(self.scrapped_jobs_list),
+                    'jobs_scraped_matched': len(self.matched_jobs_list),
+                    'scrap_duration': script_duration,
+                    'created_at': now
+                }]
             )
-            
+
             logger.info('Adding scraped jobs to monthly list...')
             self.add_scraped_jobs_to_monhtly_list(
                 bucket_name=self.datastats_bucket_utils,
                 jobs_list=self.scrapped_jobs_list
             )
-            
-            if len(self.matched_jobs_list) > 0:  
+
+            if len(self.matched_jobs_list) > 0:
                 logger.info('Generating JSON to upload...')
                 json_data = self.generate_json_to_upload(
                     job_to_scrap=self.job_to_scrap,
@@ -229,12 +218,7 @@ class DataStats:
                 )
             else:
                 logger.warning(f'No jobs have been scraped and matched with {self.job_to_scrap}.')
-                
+
         except Exception as e:
             logger.error(f'Error while executing Datastats workflow: {e}')
             raise e
-        
-        finally:
-            if conn is not None:
-                logger.info('Closing connection to pgsql...')
-                pg.close_connection(conn)
